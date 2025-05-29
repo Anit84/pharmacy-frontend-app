@@ -1,43 +1,28 @@
-# Use the Node alpine official image
-# https://hub.docker.com/_/node
-FROM node:lts-alpine AS build
+# Step 1: Build the React app
+FROM node:20.14.0 as build
 
-# Set config
-ENV NPM_CONFIG_UPDATE_NOTIFIER=false
-ENV NPM_CONFIG_FUND=false
-
-# Create and change to the app directory.
+# Set working directory
 WORKDIR /app
 
-# Copy the files to the container image
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install packages
 RUN npm ci
 
-# Copy local code to the container image.
-COPY . ./
-
-# Build the app.
+# Copy the full app and build
+COPY . .
 RUN npm run build
 
-# Use the Caddy image
-FROM caddy
+# Step 2: Serve using Nginx
+FROM nginx:alpine
 
-# Create and change to the app directory.
-WORKDIR /app
+# Copy built files to Nginx's html folder
+COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy Caddyfile to the container image.
-COPY Caddyfile ./
-
-# Copy local code to the container image.
-RUN caddy fmt Caddyfile --overwrite
-
-# Copy files to the container image.
-COPY --from=build /app ./dist
+# ✅ Copy custom Nginx config to handle client-side routing
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
-EXPOSE 3000
+EXPOSE 80
 
-# Use Caddy to run/serve the app
-CMD ["caddy", "run", "--config", "Caddyfile", "--adapter", "caddyfile"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
