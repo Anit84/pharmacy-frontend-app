@@ -10,10 +10,24 @@ import { saveCart  } from '../../actions/cart';
 import Spinner from '../layout/Spinner'
 import { Link } from 'react-router-dom';
 
+
+const calculateTotalAmount = (products) => {
+    let total_amount = 0;
+
+    products.forEach(product => {
+        const discountPrice = product.productPrice - (product.productPrice * (product.productPercent / 100));
+        const selPrice = discountPrice * product.quantity;
+        total_amount += selPrice;
+    });
+
+    return total_amount;
+};
+
 const CheckOutSummaryTwo =({productsList,payType,selectedLocation, saveCart})=>{
     const [ ispayNow, setispayNow ] = useState(payType); //handle change in payment type selection
     const [ isStartPay, setisStartPay ] = useState(false);
-    let total_amount = 0
+    console.log();
+    let total_amount = calculateTotalAmount(productsList);
     const callAllAddress = useRef(); //call Add Address dialog box in child component
 
     const callPayment = useRef(); //call payment dialog box in child component
