@@ -21,6 +21,9 @@ COPY --from=build /app/build /usr/share/nginx/html
 # ✅ Copy custom Nginx config to handle client-side routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy CRA build output (build, not dist)
+COPY --from=build /app/build ./build
+
 # Expose port 80
 EXPOSE 80
 
